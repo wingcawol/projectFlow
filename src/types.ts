@@ -58,6 +58,9 @@ export interface TeamMember {
   role: string;
   email: string;
   avatar: string; // Can be a URL or a base64 string
+  // FIX: Add password and isAdmin to support authentication and authorization. This resolves type errors in other files.
+  password: string;
+  isAdmin?: boolean;
 }
 
 export type View = 'dashboard' | 'projects' | 'calendar' | 'team' | 'settings' | 'projectDetail';

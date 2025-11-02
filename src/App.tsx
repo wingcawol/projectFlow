@@ -46,14 +46,14 @@ const App: React.FC = () => {
   const handleLogin = (email: string, password: string): boolean => {
     const user = teamMembers.find(member => member.email === email);
     // This is a mock authentication. In a real app, use hashed password verification.
-    if (user && password === 'password123') {
+    if (user && user.password === password) {
       setCurrentUser(user);
       return true;
     }
     return false;
   };
 
-  const handleSignup = (newMemberData: Omit<TeamMember, 'id'>): boolean => {
+  const handleSignup = (newMemberData: Omit<TeamMember, 'id' | 'isAdmin'>): boolean => {
     const userExists = teamMembers.some(member => member.email === newMemberData.email);
     if(userExists) {
         return false;
@@ -116,7 +116,7 @@ const App: React.FC = () => {
       case 'team':
         return <TeamView teamMembers={teamMembers} />;
       case 'settings':
-        return <SettingsView currentUser={currentUser} />;
+        return <SettingsView currentUser={currentUser} teamMembers={teamMembers} setTeamMembers={setTeamMembers} />;
       default:
         return <DashboardView projects={projects} currentUser={currentUser} />;
     }

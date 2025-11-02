@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Project, TeamMember, ProjectStatus, ProjectHistoryItem, TimelineEvent } from '@/types';
-import { PlusIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, UploadIcon, ClockIcon } from './Icons';
+import { PlusIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, UploadIcon, ClockIcon, TrashIcon } from './Icons';
 import KanbanBoard from './KanbanBoard';
 
 // Helper Functions
@@ -607,8 +607,8 @@ export const TeamView: React.FC<{ teamMembers: TeamMember[] }> = ({ teamMembers 
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">팀 멤버 관리</h1>
-                 <p className="text-sm text-slate-500 dark:text-slate-400">새로운 팀 멤버는 회원가입을 통해 추가할 수 있습니다.</p>
+                <h1 className="text-3xl font-bold">팀 멤버</h1>
+                 <p className="text-sm text-slate-500 dark:text-slate-400">총 {teamMembers.length}명의 멤버가 있습니다.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {teamMembers.map(member => (
@@ -626,7 +626,18 @@ export const TeamView: React.FC<{ teamMembers: TeamMember[] }> = ({ teamMembers 
 
 
 // Settings View
-export const SettingsView: React.FC<{ currentUser: TeamMember }> = ({ currentUser }) => {
+export const SettingsView: React.FC<{
+    currentUser: TeamMember,
+    teamMembers: TeamMember[],
+    setTeamMembers: React.Dispatch<React.SetStateAction<TeamMember[]>>
+}> = ({ currentUser, teamMembers, setTeamMembers }) => {
+
+    const handleDeleteUser = (userId: number) => {
+        if (window.confirm('정말로 이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+            setTeamMembers(prev => prev.filter(member => member.id !== userId));
+        }
+    };
+
     return (
         <div>
             <h1 className="text-3xl font-bold mb-6">설정</h1>
@@ -653,6 +664,32 @@ export const SettingsView: React.FC<{ currentUser: TeamMember }> = ({ currentUse
                         </div>
                     </form>
                 </div>
+
+                {currentUser.isAdmin && (
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm">
+                        <h2 className="text-xl font-semibold mb-4 border-b dark:border-slate-700 pb-3">사용자 관리</h2>
+                        <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+                            {teamMembers.filter(member => !member.isAdmin).map(member => (
+                                <li key={member.id} className="flex items-center justify-between py-3">
+                                    <div className="flex items-center gap-3">
+                                        <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover" />
+                                        <div>
+                                            <p className="font-semibold">{member.name} <span className="text-sm text-slate-500">({member.role})</span></p>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">{member.email}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteUser(member.id)}
+                                        className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition"
+                                        aria-label={`Delete ${member.name}`}
+                                    >
+                                        <TrashIcon />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
             </div>
              <style>{`
                 .input-field {

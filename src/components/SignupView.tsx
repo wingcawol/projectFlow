@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TeamMember } from '@/types';
 
 interface SignupViewProps {
-  onSignup: (newMemberData: Omit<TeamMember, 'id'>) => boolean;
+  onSignup: (newMemberData: Omit<TeamMember, 'id' | 'isAdmin'>) => boolean;
   onSwitchToLogin: () => void;
 }
 
@@ -45,6 +45,7 @@ const SignupView: React.FC<SignupViewProps> = ({ onSignup, onSwitchToLogin }) =>
       name,
       role,
       email,
+      password,
       avatar: avatar || `https://i.pravatar.cc/150?u=${email}`,
     });
 
