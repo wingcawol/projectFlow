@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Project, TeamMember, ProjectStatus, View, ProjectHistoryItem, TimelineEvent } from '@/types';
-import { PlusIcon, ArrowLeftIcon, UserPlusIcon, ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, UploadIcon, ClockIcon } from './Icons';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Project, TeamMember, ProjectStatus, ProjectHistoryItem, TimelineEvent } from '@/types';
+import { PlusIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, UploadIcon, ClockIcon } from './Icons';
 import KanbanBoard from './KanbanBoard';
 
 // Helper Functions
