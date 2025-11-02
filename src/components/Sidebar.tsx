@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TeamMember } from '../types';
+import { View, TeamMember } from '@/types';
 import { DashboardIcon, ProjectsIcon, CalendarIcon, TeamIcon, SettingsIcon } from './Icons';
 
 interface SidebarProps {

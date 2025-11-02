@@ -1,4 +1,4 @@
-import { Project, TeamMember } from '../types';
+import { Project, TeamMember } from '@/types';
 
 export const initialTeamMembers: TeamMember[] = [
     { id: 1, name: '김철수', role: 'Project Manager', email: 'cskim@example.com', avatar: 'https://i.pravatar.cc/150?u=1' },

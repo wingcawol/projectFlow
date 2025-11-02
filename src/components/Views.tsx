@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Project, TeamMember, ProjectStatus, View, ProjectHistoryItem, TimelineEvent } from '../types';
+import { Project, TeamMember, ProjectStatus, View, ProjectHistoryItem, TimelineEvent } from '@/types';
 import { PlusIcon, ArrowLeftIcon, UserPlusIcon, ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, UploadIcon, ClockIcon } from './Icons';
 import KanbanBoard from './KanbanBoard';
 

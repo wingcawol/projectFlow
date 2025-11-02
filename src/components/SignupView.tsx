@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TeamMember } from '../types';
+import { TeamMember } from '@/types';
 
 interface SignupViewProps {
   onSignup: (newMemberData: Omit<TeamMember, 'id'>) => boolean;

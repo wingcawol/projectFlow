@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Project, TeamMember, View } from './types';
-import { initialProjects, initialTeamMembers } from './data/mockData';
-import useLocalStorage from './hooks/useLocalStorage';
-import Sidebar from './components/Sidebar';
-import { DashboardView, ProjectListView, ProjectDetailView, CalendarView, TeamView, SettingsView } from './components/Views';
-import LoginView from './components/LoginView';
-import SignupView from './components/SignupView';
+import { Project, TeamMember, View } from '@/types';
+import { initialProjects, initialTeamMembers } from '@/data/mockData';
+import useLocalStorage from '@/hooks/useLocalStorage';
+import Sidebar from '@/components/Sidebar';
+import { DashboardView, ProjectListView, ProjectDetailView, CalendarView, TeamView, SettingsView } from '@/components/Views';
+import LoginView from '@/components/LoginView';
+import SignupView from '@/components/SignupView';
 
 // Helper function to calculate progress
 const calculateProgress = (project: Project): number => {
