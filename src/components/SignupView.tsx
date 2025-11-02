@@ -41,6 +41,7 @@ const SignupView: React.FC<SignupViewProps> = ({ onSignup, onSwitchToLogin }) =>
         return;
     }
 
+    // FIX: Pass the password to the onSignup function to align with the updated TeamMember type.
     const success = onSignup({
       name,
       role,
@@ -117,7 +118,6 @@ const SignupView: React.FC<SignupViewProps> = ({ onSignup, onSwitchToLogin }) =>
             </p>
         </div>
       </div>
-       {/* FIX: Removed invalid 'jsx' prop from style tag. */}
        <style>{`
         .input-field {
             appearance: none;

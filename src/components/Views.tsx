@@ -626,6 +626,7 @@ export const TeamView: React.FC<{ teamMembers: TeamMember[] }> = ({ teamMembers 
 
 
 // Settings View
+// FIX: Update SettingsView props to accept teamMembers and setTeamMembers for user management.
 export const SettingsView: React.FC<{
     currentUser: TeamMember,
     teamMembers: TeamMember[],
@@ -665,10 +666,12 @@ export const SettingsView: React.FC<{
                     </form>
                 </div>
 
+                {/* FIX: Add user management section visible only to admin users by checking currentUser.isAdmin. */}
                 {currentUser.isAdmin && (
                     <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm">
                         <h2 className="text-xl font-semibold mb-4 border-b dark:border-slate-700 pb-3">사용자 관리</h2>
                         <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+                            {/* FIX: Filter out the admin user from the list of users that can be deleted. */}
                             {teamMembers.filter(member => !member.isAdmin).map(member => (
                                 <li key={member.id} className="flex items-center justify-between py-3">
                                     <div className="flex items-center gap-3">

@@ -1,7 +1,7 @@
 import { Project, TeamMember } from '@/types';
 
-// FIX: Added all team members referenced in projects and included passwords to match the updated TeamMember type.
-// This resolves the compilation error and a functional bug where project team members were missing.
+// FIX: Added 'password' to each team member object to match the updated TeamMember type, resolving compilation errors.
+// Added a new admin user to support user management features.
 export const initialTeamMembers: TeamMember[] = [
     {
         id: 1,

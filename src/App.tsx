@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Project, TeamMember, View } from '@/types';
 import { initialProjects, initialTeamMembers } from '@/data/mockData';
 import useLocalStorage from '@/hooks/useLocalStorage';
@@ -43,9 +43,22 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useLocalStorage<TeamMember | null>('currentUser', null);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
+  useEffect(() => {
+    // One-time data migration check on component mount.
+    // If any team member in localStorage is missing a password, it indicates stale data.
+    // In this case, reset the team members to the initial mock data.
+    // FIX: Accessing member.password which requires updating the TeamMember type.
+    const isStale = teamMembers.length > 0 && teamMembers.some(member => typeof member.password !== 'string');
+    if (isStale) {
+      console.log('Stale team member data detected in localStorage. Resetting to initial data.');
+      setTeamMembers(initialTeamMembers);
+    }
+  }, []); // Empty dependency array ensures this runs only once.
+
   const handleLogin = (email: string, password: string): boolean => {
     const user = teamMembers.find(member => member.email === email);
     // This is a mock authentication. In a real app, use hashed password verification.
+    // FIX: Accessing user.password which requires updating the TeamMember type.
     if (user && user.password === password) {
       setCurrentUser(user);
       return true;
@@ -116,6 +129,7 @@ const App: React.FC = () => {
       case 'team':
         return <TeamView teamMembers={teamMembers} />;
       case 'settings':
+        // FIX: Pass teamMembers and setTeamMembers props to SettingsView for user management.
         return <SettingsView currentUser={currentUser} teamMembers={teamMembers} setTeamMembers={setTeamMembers} />;
       default:
         return <DashboardView projects={projects} currentUser={currentUser} />;
