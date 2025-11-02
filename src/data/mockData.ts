@@ -7,7 +7,7 @@ export const initialTeamMembers: TeamMember[] = [
         id: 1,
         name: 'Admin',
         role: 'System Administrator',
-        email: 'admin@projectflow.com',
+        email: 'admin@mpse-cae.com',
         avatar: 'https://i.pravatar.cc/150?u=admin',
         password: 'admin123',
         isAdmin: true,
