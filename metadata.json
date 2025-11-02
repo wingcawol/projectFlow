@@ -1,0 +1,5 @@
+{
+  "name": "ProjectFlow - Project Management System",
+  "description": "A comprehensive project management system built with React and Tailwind CSS. It allows teams to manage projects, track progress with Kanban boards, schedule tasks on a calendar, and manage team members efficiently.",
+  "requestFramePermissions": []
+}
