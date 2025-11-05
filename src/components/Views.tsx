@@ -219,17 +219,12 @@ export const DashboardView: React.FC<{ projects: Project[], currentUser: TeamMem
 };
 
 // ProjectList View
-// FIX: Update ProjectListView props to accept currentUser and onDeleteProject to support project deletion by admin.
 export const ProjectListView: React.FC<{
   projects: Project[];
   teamMembers: TeamMember[];
-  // FIX: Updated onAddProject prop to return a Promise, aligning with async API calls.
   onAddProject: (p: Omit<Project, 'id' | 'progress' | 'history' | 'timeline' | 'files' | 'kanban'> & { team: string[] }) => Promise<void>;
   onSelectProject: (id: number) => void;
-  currentUser: TeamMember;
-  // FIX: Updated onDeleteProject prop to return a Promise, aligning with async API calls.
-  onDeleteProject: (id: number) => Promise<void>;
-}> = ({ projects, teamMembers, onAddProject, onSelectProject, currentUser, onDeleteProject }) => {
+}> = ({ projects, teamMembers, onAddProject, onSelectProject }) => {
     const [filter, setFilter] = useState<ProjectStatus | 'all'>('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -272,7 +267,6 @@ export const ProjectListView: React.FC<{
                             <th className="p-4 text-left font-semibold">기간</th>
                             <th className="p-4 text-center font-semibold">상태</th>
                             <th className="p-4 text-left font-semibold">진행률</th>
-                            {currentUser.isAdmin && <th className="p-4 text-center font-semibold">동작</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -293,20 +287,6 @@ export const ProjectListView: React.FC<{
                                         <span className="text-sm font-semibold">{project.progress}%</span>
                                     </div>
                                 </td>
-                                {currentUser.isAdmin && (
-                                    <td className="p-4 text-center">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onDeleteProject(project.id);
-                                            }}
-                                            className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition"
-                                            aria-label={`Delete ${project.name}`}
-                                        >
-                                            <TrashIcon />
-                                        </button>
-                                    </td>
-                                )}
                             </tr>
                         ))}
                     </tbody>
@@ -878,23 +858,27 @@ export const SettingsView: React.FC<{
                     <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border-2 border-red-500/50">
                         <h2 className="text-xl font-semibold mb-4 border-b dark:border-slate-700 pb-3 text-red-600 dark:text-red-400">프로젝트 관리 (위험 구역)</h2>
                         <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">프로젝트를 삭제하면 되돌릴 수 없습니다. 신중하게 진행해주세요.</p>
-                        <ul className="divide-y divide-slate-200 dark:divide-slate-700">
-                            {projects.map(project => (
-                                <li key={project.id} className="flex items-center justify-between py-3">
-                                    <div>
-                                        <p className="font-semibold">{project.name}</p>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">클라이언트: {project.client} | PM: {project.pm}</p>
-                                    </div>
-                                    <button
-                                        onClick={() => onDeleteProject(project.id)}
-                                        className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition"
-                                        aria-label={`Delete ${project.name}`}
-                                    >
-                                        <TrashIcon />
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                        {projects.length > 0 ? (
+                            <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+                                {projects.map(project => (
+                                    <li key={project.id} className="flex items-center justify-between py-3">
+                                        <div>
+                                            <p className="font-semibold">{project.name}</p>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">클라이언트: {project.client} | PM: {project.pm}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => onDeleteProject(project.id)}
+                                            className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition"
+                                            aria-label={`Delete ${project.name}`}
+                                        >
+                                            <TrashIcon />
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-center text-slate-500 dark:text-slate-400 py-4">삭제할 프로젝트가 없습니다.</p>
+                        )}
                     </div>
                 )}
             </div>

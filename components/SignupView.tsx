@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { TeamMember } from '@/types';
 
 interface SignupViewProps {
-  // FIX: Update the 'onSignup' prop type to reflect the new TeamMember interface, which now includes a 'password'.
-  onSignup: (newMemberData: Omit<TeamMember, 'id' | 'isAdmin'>) => boolean;
+  // FIX: Update the 'onSignup' prop type to support async operations.
+  onSignup: (newMemberData: Omit<TeamMember, 'id' | 'isAdmin'>) => Promise<boolean>;
   onSwitchToLogin: () => void;
 }
 
@@ -17,6 +17,8 @@ const SignupView: React.FC<SignupViewProps> = ({ onSignup, onSwitchToLogin }) =>
   const [avatar, setAvatar] = useState<string>('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
+  // FIX: Add isLoading state to manage UI during async signup.
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -31,7 +33,7 @@ const SignupView: React.FC<SignupViewProps> = ({ onSignup, onSwitchToLogin }) =>
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (password !== confirmPassword) {
@@ -43,8 +45,9 @@ const SignupView: React.FC<SignupViewProps> = ({ onSignup, onSwitchToLogin }) =>
         return;
     }
 
+    setIsLoading(true);
     // FIX: Pass the password to the onSignup function to align with the updated TeamMember type. This resolves the error on the 'password' property.
-    const success = onSignup({
+    const success = await onSignup({
       name,
       role,
       email,
@@ -55,6 +58,7 @@ const SignupView: React.FC<SignupViewProps> = ({ onSignup, onSwitchToLogin }) =>
     if (!success) {
       setError('이미 사용 중인 이메일입니다.');
     }
+    setIsLoading(false);
   };
 
   return (
@@ -109,7 +113,9 @@ const SignupView: React.FC<SignupViewProps> = ({ onSignup, onSwitchToLogin }) =>
                 {error && <p className="text-sm text-red-500">{error}</p>}
 
                 <div>
-                    <button type="submit" className="w-full btn-primary mt-2">회원가입</button>
+                    <button type="submit" disabled={isLoading} className="w-full btn-primary mt-2 disabled:bg-indigo-400">
+                        {isLoading ? '가입 중...' : '회원가입'}
+                    </button>
                 </div>
             </form>
              <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">

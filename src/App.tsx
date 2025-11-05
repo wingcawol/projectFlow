@@ -183,8 +183,7 @@ const App: React.FC = () => {
       case 'dashboard':
         return <DashboardView projects={projects} currentUser={currentUser} />;
       case 'projects':
-        // FIX: Added currentUser and onDeleteProject props to ProjectListView call.
-        return <ProjectListView projects={projects} teamMembers={teamMembers} onAddProject={handleAddProject} onSelectProject={handleSelectProject} currentUser={currentUser} onDeleteProject={handleDeleteProject} />;
+        return <ProjectListView projects={projects} teamMembers={teamMembers} onAddProject={handleAddProject} onSelectProject={handleSelectProject} />;
       case 'projectDetail':
         return selectedProject ? <ProjectDetailView project={selectedProject} teamMembers={teamMembers} onBack={() => setCurrentView('projects')} updateProject={updateProject} currentUser={currentUser} /> : <div>프로젝트를 찾을 수 없습니다.</div>;
       case 'calendar':
@@ -219,10 +218,8 @@ const App: React.FC = () => {
 
   if (!currentUser) {
     if (authMode === 'login') {
-        // FIX: The onLogin prop for LoginView expects a Promise<boolean>, which handleLogin provides. The error seems to stem from a stale type definition. No change is needed here as the types are compatible in the provided `src` files.
         return <LoginView onLogin={handleLogin} onSwitchToSignup={() => setAuthMode('signup')} />;
     }
-    // FIX: The onSignup prop for SignupView expects a Promise<boolean>, which handleSignup provides. The error seems to be from a stale type definition. No change is needed here as the types are compatible in the provided `src` files.
     return <SignupView onSignup={handleSignup} onSwitchToLogin={() => setAuthMode('login')} />;
   }
 

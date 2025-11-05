@@ -28,7 +28,8 @@ const ProgressBar: React.FC<{ progress: number }> = ({ progress }) => (
 const AddProjectModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  addProject: (newProject: Omit<Project, 'id' | 'progress' | 'team' | 'history' | 'timeline' | 'files' | 'kanban'> & { team: string[] }) => void;
+  // FIX: Updated addProject prop to return a Promise, aligning with async API calls.
+  addProject: (newProject: Omit<Project, 'id' | 'progress' | 'team' | 'history' | 'timeline' | 'files' | 'kanban'> & { team: string[] }) => Promise<void>;
   teamMembers: TeamMember[];
 }> = ({ isOpen, onClose, addProject, teamMembers }) => {
     if (!isOpen) return null;
@@ -221,7 +222,8 @@ export const DashboardView: React.FC<{ projects: Project[], currentUser: TeamMem
 export const ProjectListView: React.FC<{
   projects: Project[];
   teamMembers: TeamMember[];
-  onAddProject: (p: Omit<Project, 'id' | 'progress' | 'team' | 'history' | 'timeline' | 'files' | 'kanban'> & { team: string[] }) => void;
+  // FIX: Updated onAddProject prop to return a Promise, aligning with async API calls.
+  onAddProject: (p: Omit<Project, 'id' | 'progress' | 'team' | 'history' | 'timeline' | 'files' | 'kanban'> & { team: string[] }) => Promise<void>;
   onSelectProject: (id: number) => void;
 }> = ({ projects, teamMembers, onAddProject, onSelectProject }) => {
     const [filter, setFilter] = useState<ProjectStatus | 'all'>('all');
@@ -788,22 +790,14 @@ export const TeamView: React.FC<{ teamMembers: TeamMember[] }> = ({ teamMembers 
 
 
 // Settings View
-// FIX: Update SettingsView props to accept teamMembers and setTeamMembers for user management.
+// FIX: Update SettingsView props to support async actions and project deletion.
 export const SettingsView: React.FC<{
     currentUser: TeamMember,
     teamMembers: TeamMember[],
-    setTeamMembers: React.Dispatch<React.SetStateAction<TeamMember[]>>
-}> = ({ currentUser, teamMembers, setTeamMembers }) => {
-
-    const handleDeleteUser = (userId: number) => {
-        if (currentUser.id === userId) {
-            alert("자기 자신은 삭제할 수 없습니다.");
-            return;
-        }
-        if (window.confirm('정말로 이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-            setTeamMembers(prev => prev.filter(member => member.id !== userId));
-        }
-    };
+    onDeleteUser: (userId: number) => Promise<void>;
+    projects: Project[];
+    onDeleteProject: (projectId: number) => Promise<void>;
+}> = ({ currentUser, teamMembers, onDeleteUser, projects, onDeleteProject }) => {
 
     return (
         <div>
@@ -850,7 +844,7 @@ export const SettingsView: React.FC<{
                                     {/* Admin cannot be deleted */}
                                     {!member.isAdmin && (
                                         <button
-                                            onClick={() => handleDeleteUser(member.id)}
+                                            onClick={() => onDeleteUser(member.id)}
                                             className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition"
                                             aria-label={`Delete ${member.name}`}
                                         >
@@ -860,6 +854,35 @@ export const SettingsView: React.FC<{
                                 </li>
                             ))}
                         </ul>
+                    </div>
+                )}
+                
+                {/* FIX: Add project management section for admins. */}
+                {currentUser.isAdmin && (
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border-2 border-red-500/50">
+                        <h2 className="text-xl font-semibold mb-4 border-b dark:border-slate-700 pb-3 text-red-600 dark:text-red-400">프로젝트 관리 (위험 구역)</h2>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">프로젝트를 삭제하면 되돌릴 수 없습니다. 신중하게 진행해주세요.</p>
+                        {projects.length > 0 ? (
+                            <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+                                {projects.map(project => (
+                                    <li key={project.id} className="flex items-center justify-between py-3">
+                                        <div>
+                                            <p className="font-semibold">{project.name}</p>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">클라이언트: {project.client} | PM: {project.pm}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => onDeleteProject(project.id)}
+                                            className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition"
+                                            aria-label={`Delete ${project.name}`}
+                                        >
+                                            <TrashIcon />
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-center text-slate-500 dark:text-slate-400 py-4">삭제할 프로젝트가 없습니다.</p>
+                        )}
                     </div>
                 )}
             </div>
