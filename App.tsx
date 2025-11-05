@@ -63,7 +63,8 @@ const App: React.FC = () => {
     }
   }, []); // Empty dependency array ensures this runs only once.
 
-  const handleLogin = (email: string, password: string): boolean => {
+  // FIX: Make onLogin async to match the prop type of LoginView, which expects a Promise.
+  const handleLogin = async (email: string, password: string): Promise<boolean> => {
     const user = teamMembers.find(member => member.email === email);
     // This is a mock authentication. In a real app, use hashed password verification.
     // FIX: Accessing user.password which requires updating the TeamMember type. This resolves the error 'Property 'password' does not exist on type 'TeamMember''.
@@ -75,7 +76,8 @@ const App: React.FC = () => {
   };
 
   // FIX: Updated signature to Omit 'isAdmin' as it's not set during signup. The password property is now correctly typed.
-  const handleSignup = (newMemberData: Omit<TeamMember, 'id' | 'isAdmin'>): boolean => {
+  // FIX: Make onSignup async to match the prop type of SignupView, which expects a Promise.
+  const handleSignup = async (newMemberData: Omit<TeamMember, 'id' | 'isAdmin'>): Promise<boolean> => {
     const userExists = teamMembers.some(member => member.email === newMemberData.email);
     if(userExists) {
         return false;
@@ -85,7 +87,7 @@ const App: React.FC = () => {
         id: Date.now(),
         isAdmin: false, // Default new users to non-admin
     };
-    setTeamMembers([...teamMembers, newMember]);
+    setTeamMembers(prevTeamMembers => [...prevTeamMembers, newMember]);
     setCurrentUser(newMember); // Auto-login after signup
     return true;
   };
@@ -107,7 +109,8 @@ const App: React.FC = () => {
   }, [setProjects]);
 
 
-  const handleAddProject = (newProjectData: Omit<Project, 'id' | 'progress' | 'history' | 'timeline' | 'files' | 'kanban'> & { team: string[] }) => {
+  // FIX: Make onAddProject async to match the prop type of ProjectListView, which expects a Promise.
+  const handleAddProject = async (newProjectData: Omit<Project, 'id' | 'progress' | 'history' | 'timeline' | 'files' | 'kanban'> & { team: string[] }) => {
     const newProject: Project = {
       ...newProjectData,
       id: Date.now(),
@@ -117,9 +120,26 @@ const App: React.FC = () => {
       files: [],
       kanban: { todo: [], inprogress: [], done: [] }
     };
-    setProjects([newProject, ...projects]);
+    setProjects(prevProjects => [newProject, ...prevProjects]);
   };
   
+  // FIX: Add delete handlers for users and projects to pass to SettingsView.
+  const handleDeleteUser = async (userId: number): Promise<void> => {
+    if (currentUser?.id === userId) {
+      alert("자기 자신은 삭제할 수 없습니다.");
+      return;
+    }
+    if (window.confirm('정말로 이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      setTeamMembers(prev => prev.filter(member => member.id !== userId));
+    }
+  };
+
+  const handleDeleteProject = async (projectId: number): Promise<void> => {
+    if (window.confirm('정말로 이 프로젝트를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      setProjects(prevProjects => prevProjects.filter(p => p.id !== projectId));
+    }
+  };
+
   const selectedProject = useMemo(() => {
       return projects.find(p => p.id === selectedProjectId) || null;
   }, [projects, selectedProjectId]);
@@ -142,8 +162,14 @@ const App: React.FC = () => {
       case 'team':
         return <TeamView teamMembers={teamMembers} />;
       case 'settings':
-        // FIX: Pass teamMembers and setTeamMembers props to SettingsView for user management. This resolves the property assignment error.
-        return <SettingsView currentUser={currentUser} teamMembers={teamMembers} setTeamMembers={setTeamMembers} />;
+        // FIX: Pass appropriate props to SettingsView to resolve the property assignment error.
+        return <SettingsView
+          currentUser={currentUser}
+          teamMembers={teamMembers}
+          onDeleteUser={handleDeleteUser}
+          projects={projects}
+          onDeleteProject={handleDeleteProject}
+        />;
       default:
         return <DashboardView projects={projects} currentUser={currentUser} />;
     }

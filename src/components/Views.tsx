@@ -270,25 +270,33 @@ export const ProjectListView: React.FC<{
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredProjects.map(project => (
-                            <tr
-                                key={project.id}
-                                onClick={() => onSelectProject(project.id)}
-                                className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer"
-                            >
-                                <td className="p-4 font-medium">{project.name}</td>
-                                <td className="p-4">{project.client}</td>
-                                <td className="p-4">{project.pm}</td>
-                                <td className="p-4 text-sm">{`${formatDate(project.startDate)} ~ ${formatDate(project.endDate)}`}</td>
-                                <td className="p-4 text-center">{getStatusBadge(project.status)}</td>
-                                <td className="p-4">
-                                    <div className="flex items-center gap-2">
-                                        <ProgressBar progress={project.progress} />
-                                        <span className="text-sm font-semibold">{project.progress}%</span>
-                                    </div>
+                        {filteredProjects.length > 0 ? (
+                            filteredProjects.map(project => (
+                                <tr
+                                    key={project.id}
+                                    onClick={() => onSelectProject(project.id)}
+                                    className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer"
+                                >
+                                    <td className="p-4 font-medium">{project.name}</td>
+                                    <td className="p-4">{project.client}</td>
+                                    <td className="p-4">{project.pm}</td>
+                                    <td className="p-4 text-sm">{`${formatDate(project.startDate)} ~ ${formatDate(project.endDate)}`}</td>
+                                    <td className="p-4 text-center">{getStatusBadge(project.status)}</td>
+                                    <td className="p-4">
+                                        <div className="flex items-center gap-2">
+                                            <ProgressBar progress={project.progress} />
+                                            <span className="text-sm font-semibold">{project.progress}%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={6} className="text-center p-8 text-slate-500 dark:text-slate-400">
+                                    표시할 프로젝트가 없습니다.
                                 </td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -711,6 +719,21 @@ export const MyTasksView: React.FC<{
       e.preventDefault();
       e.currentTarget.classList.remove('drag-over');
   };
+
+  const totalTasks = userTasks.todo.length + userTasks.inprogress.length + userTasks.done.length;
+  
+  if (totalTasks === 0) {
+      return (
+          <div>
+              <h1 className="text-3xl font-bold mb-6">내 작업 관리</h1>
+              <div className="text-center bg-white dark:bg-slate-800 p-12 rounded-lg shadow-sm">
+                  <i className="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+                  <h2 className="text-2xl font-semibold">모든 작업을 완료했습니다!</h2>
+                  <p className="text-slate-500 dark:text-slate-400 mt-2">새로운 작업이 할당되면 여기에 표시됩니다.</p>
+              </div>
+          </div>
+      );
+  }
 
   const TaskCard: React.FC<{ task: UserTask, sourceColumn: UserTaskColumn }> = ({ task, sourceColumn }) => (
       <div
