@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { TeamMember } from '../types';
+// FIX: The path alias '@/' is used to maintain consistency.
+import { TeamMember } from '@/types';
 
 interface SignupViewProps {
-  onSignup: (newMemberData: Omit<TeamMember, 'id'>) => boolean;
+  // FIX: Update the 'onSignup' prop type to reflect the new TeamMember interface, which now includes a 'password'.
+  onSignup: (newMemberData: Omit<TeamMember, 'id' | 'isAdmin'>) => boolean;
   onSwitchToLogin: () => void;
 }
 
@@ -41,10 +43,12 @@ const SignupView: React.FC<SignupViewProps> = ({ onSignup, onSwitchToLogin }) =>
         return;
     }
 
+    // FIX: Pass the password to the onSignup function to align with the updated TeamMember type. This resolves the error on the 'password' property.
     const success = onSignup({
       name,
       role,
       email,
+      password,
       avatar: avatar || `https://i.pravatar.cc/150?u=${email}`,
     });
 

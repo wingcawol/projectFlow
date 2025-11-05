@@ -63,4 +63,5 @@ export interface TeamMember {
   isAdmin?: boolean;
 }
 
-export type View = 'dashboard' | 'projects' | 'calendar' | 'team' | 'settings' | 'projectDetail';
+// FIX: Add 'myTasks' to the View union type to accommodate the new view.
+export type View = 'dashboard' | 'projects' | 'calendar' | 'team' | 'settings' | 'projectDetail' | 'myTasks';

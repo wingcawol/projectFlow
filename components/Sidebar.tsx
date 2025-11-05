@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, TeamMember } from '../types';
-import { DashboardIcon, ProjectsIcon, CalendarIcon, TeamIcon, SettingsIcon } from './Icons';
+import { View, TeamMember } from '@/types';
+// FIX: Import the new 'UserCheckIcon' for the 'My Tasks' navigation item.
+import { DashboardIcon, ProjectsIcon, CalendarIcon, TeamIcon, SettingsIcon, UserCheckIcon } from '@/components/Icons';
 
 interface SidebarProps {
   currentView: View;
@@ -47,6 +48,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, currentU
       <nav className="flex-1 p-4 space-y-2">
         <NavItem viewName="dashboard" currentView={currentView} setCurrentView={setCurrentView} icon={<DashboardIcon />} text="대시보드" />
         <NavItem viewName="projects" currentView={currentView} setCurrentView={setCurrentView} icon={<ProjectsIcon />} text="프로젝트 목록" />
+        {/* FIX: Add a new navigation item for 'My Tasks' view. This resolves the error about 'myTasks' not being assignable to 'View' after the type definition is updated. */}
+        <NavItem viewName="myTasks" currentView={currentView} setCurrentView={setCurrentView} icon={<UserCheckIcon />} text="내 작업" />
         <NavItem viewName="calendar" currentView={currentView} setCurrentView={setCurrentView} icon={<CalendarIcon />} text="캘린더" />
         <NavItem viewName="team" currentView={currentView} setCurrentView={setCurrentView} icon={<TeamIcon />} text="팀 멤버" />
         <NavItem viewName="settings" currentView={currentView} setCurrentView={setCurrentView} icon={<SettingsIcon />} text="설정" />

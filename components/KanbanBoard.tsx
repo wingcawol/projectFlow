@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { KanbanState, KanbanTask, Project } from '../types';
+import { KanbanState, KanbanTask, Project } from '@/types';
 
 interface KanbanBoardProps {
   project: Project;

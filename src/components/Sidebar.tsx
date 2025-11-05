@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TeamMember } from '@/types';
-import { DashboardIcon, ProjectsIcon, CalendarIcon, TeamIcon, SettingsIcon } from './Icons';
+// FIX: Import the new 'UserCheckIcon' for the 'My Tasks' navigation item.
+import { DashboardIcon, ProjectsIcon, CalendarIcon, TeamIcon, SettingsIcon, UserCheckIcon } from './Icons';
 
 interface SidebarProps {
   currentView: View;
@@ -13,8 +14,6 @@ const NavItem: React.FC<{
   viewName: View;
   currentView: View;
   setCurrentView: (view: View) => void;
-  // FIX: Changed icon prop type from React.ReactNode to React.ReactElement to correctly type it for React.cloneElement.
-  // FIX: The icon's props type is specified to allow passing 'className' via React.cloneElement, resolving the type error.
   icon: React.ReactElement<{ className?: string }>;
   text: string;
 }> = ({ viewName, currentView, setCurrentView, icon, text }) => {
@@ -31,7 +30,6 @@ const NavItem: React.FC<{
       }}
       className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${isActive ? activeClasses : inactiveClasses}`}
     >
-      {/* FIX: Removed unnecessary type assertion after correcting the icon prop type. */}
       {React.cloneElement(icon, { className: 'w-6' })}
       <span className="ml-4 font-medium">{text}</span>
     </a>
@@ -47,6 +45,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, currentU
       <nav className="flex-1 p-4 space-y-2">
         <NavItem viewName="dashboard" currentView={currentView} setCurrentView={setCurrentView} icon={<DashboardIcon />} text="대시보드" />
         <NavItem viewName="projects" currentView={currentView} setCurrentView={setCurrentView} icon={<ProjectsIcon />} text="프로젝트 목록" />
+        {/* FIX: Add a new navigation item for 'My Tasks' view. This resolves the error about 'myTasks' not being assignable to 'View' after the type definition is updated. */}
+        <NavItem viewName="myTasks" currentView={currentView} setCurrentView={setCurrentView} icon={<UserCheckIcon />} text="내 작업" />
         <NavItem viewName="calendar" currentView={currentView} setCurrentView={setCurrentView} icon={<CalendarIcon />} text="캘린더" />
         <NavItem viewName="team" currentView={currentView} setCurrentView={setCurrentView} icon={<TeamIcon />} text="팀 멤버" />
         <NavItem viewName="settings" currentView={currentView} setCurrentView={setCurrentView} icon={<SettingsIcon />} text="설정" />

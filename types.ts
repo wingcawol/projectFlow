@@ -1,4 +1,3 @@
-
 export type ProjectStatus = '진행' | '시작' | '중단' | '종료';
 
 export interface KanbanTask {
@@ -59,6 +58,10 @@ export interface TeamMember {
   role: string;
   email: string;
   avatar: string; // Can be a URL or a base64 string
+  // FIX: Add password and isAdmin to support authentication and authorization. This resolves type errors in other files.
+  password: string;
+  isAdmin?: boolean;
 }
 
-export type View = 'dashboard' | 'projects' | 'calendar' | 'team' | 'settings' | 'projectDetail';
+// FIX: Add 'myTasks' to the View union type to accommodate the new view.
+export type View = 'dashboard' | 'projects' | 'calendar' | 'team' | 'settings' | 'projectDetail' | 'myTasks';

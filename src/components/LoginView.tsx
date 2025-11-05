@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 interface LoginViewProps {
-  onLogin: (email: string, password: string) => boolean;
+  onLogin: (email: string, password: string) => Promise<boolean>;
   onSwitchToSignup: () => void;
 }
 
@@ -9,14 +9,17 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSwitchToSignup }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const success = onLogin(email, password);
+    setIsLoading(true);
+    const success = await onLogin(email, password);
     if (!success) {
       setError('이메일 또는 비밀번호가 올바르지 않습니다.');
     }
+    setIsLoading(false);
   };
 
   return (
@@ -65,9 +68,10 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSwitchToSignup }) => {
                 <div>
                     <button
                         type="submit"
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        disabled={isLoading}
+                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400"
                     >
-                        로그인
+                        {isLoading ? '로그인 중...' : '로그인'}
                     </button>
                 </div>
             </form>

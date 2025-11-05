@@ -77,8 +77,10 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSwitchToSignup }) => {
                     회원가입
                 </button>
             </p>
-            <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
-                데모용 계정: 팀 멤버의 이메일, 비밀번호는 'password123' 입니다.
+             <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                <b>데모 계정:</b><br/>
+                Admin: admin@projectflow.com / admin123<br/>
+                일반 사용자: cskim@example.com / password123
             </p>
         </div>
       </div>

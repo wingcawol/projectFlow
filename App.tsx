@@ -1,20 +1,26 @@
-
-import React, { useState, useMemo, useCallback } from 'react';
-import { Project, TeamMember, View } from './types';
-import { initialProjects, initialTeamMembers } from './data/mockData';
-import useLocalStorage from './hooks/useLocalStorage';
-import Sidebar from './components/Sidebar';
-import { DashboardView, ProjectListView, ProjectDetailView, CalendarView, TeamView, SettingsView } from './components/Views';
-import LoginView from './components/LoginView';
-import SignupView from './components/SignupView';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+// FIX: The path alias '@/' is used to maintain consistency.
+import { Project, TeamMember, View } from '@/types';
+import { initialProjects, initialTeamMembers } from '@/data/mockData';
+import useLocalStorage from '@/hooks/useLocalStorage';
+import Sidebar from '@/components/Sidebar';
+// FIX: Import the new 'MyTasksView' component to be used in the main view rendering logic. This resolves the error 'Module has no exported member MyTasksView'.
+import { DashboardView, ProjectListView, ProjectDetailView, CalendarView, TeamView, SettingsView, MyTasksView } from '@/components/Views';
+import LoginView from '@/components/LoginView';
+import SignupView from '@/components/SignupView';
 
 // Helper function to calculate progress
 const calculateProgress = (project: Project): number => {
+  if (project.status === '종료') return 100;
+  
   if (!project.timeline || project.timeline.length === 0) {
     const allTasks = [...project.kanban.todo, ...project.kanban.inprogress, ...project.kanban.done];
-    if (allTasks.length === 0) return project.status === '종료' ? 100 : 0;
+    if (allTasks.length === 0) return 0;
     return Math.round((project.kanban.done.length / allTasks.length) * 100);
   }
+
+  const totalWeight = project.timeline.reduce((sum, m) => sum + m.weight, 0);
+  if (totalWeight === 0) return 0;
 
   const totalProgress = project.timeline.reduce((acc, milestone) => {
     const milestoneTasks = [
@@ -29,7 +35,8 @@ const calculateProgress = (project: Project): number => {
 
     const doneTasks = milestoneTasks.filter(task => project.kanban.done.some(doneTask => doneTask.id === task.id));
     const milestoneProgress = (doneTasks.length / milestoneTasks.length);
-    return acc + (milestoneProgress * (milestone.weight / 100));
+    // Normalize weight
+    return acc + (milestoneProgress * (milestone.weight / totalWeight));
   }, 0);
 
   return Math.round(totalProgress * 100);
@@ -44,17 +51,31 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useLocalStorage<TeamMember | null>('currentUser', null);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
+  useEffect(() => {
+    // One-time data migration check on component mount.
+    // If any team member in localStorage is missing a password, it indicates stale data.
+    // In this case, reset the team members to the initial mock data.
+    // FIX: Accessing member.password which requires updating the TeamMember type.
+    const isStale = teamMembers.length > 0 && teamMembers.some(member => typeof (member as any).password !== 'string');
+    if (isStale) {
+      console.log('Stale team member data detected in localStorage. Resetting to initial data.');
+      setTeamMembers(initialTeamMembers);
+    }
+  }, []); // Empty dependency array ensures this runs only once.
+
   const handleLogin = (email: string, password: string): boolean => {
     const user = teamMembers.find(member => member.email === email);
     // This is a mock authentication. In a real app, use hashed password verification.
-    if (user && password === 'password123') {
+    // FIX: Accessing user.password which requires updating the TeamMember type. This resolves the error 'Property 'password' does not exist on type 'TeamMember''.
+    if (user && user.password === password) {
       setCurrentUser(user);
       return true;
     }
     return false;
   };
 
-  const handleSignup = (newMemberData: Omit<TeamMember, 'id'>): boolean => {
+  // FIX: Updated signature to Omit 'isAdmin' as it's not set during signup. The password property is now correctly typed.
+  const handleSignup = (newMemberData: Omit<TeamMember, 'id' | 'isAdmin'>): boolean => {
     const userExists = teamMembers.some(member => member.email === newMemberData.email);
     if(userExists) {
         return false;
@@ -62,6 +83,7 @@ const App: React.FC = () => {
     const newMember: TeamMember = {
         ...newMemberData,
         id: Date.now(),
+        isAdmin: false, // Default new users to non-admin
     };
     setTeamMembers([...teamMembers, newMember]);
     setCurrentUser(newMember); // Auto-login after signup
@@ -114,10 +136,14 @@ const App: React.FC = () => {
         return selectedProject ? <ProjectDetailView project={selectedProject} teamMembers={teamMembers} onBack={() => setCurrentView('projects')} updateProject={updateProject} currentUser={currentUser} /> : <div>프로젝트를 찾을 수 없습니다.</div>;
       case 'calendar':
         return <CalendarView projects={projects} />;
+      // FIX: Add a case to render the new 'MyTasksView' component. This resolves the error 'Type '"myTasks"' is not comparable to type 'View''.
+      case 'myTasks':
+        return <MyTasksView projects={projects} currentUser={currentUser} updateProject={updateProject} />;
       case 'team':
         return <TeamView teamMembers={teamMembers} />;
       case 'settings':
-        return <SettingsView currentUser={currentUser} />;
+        // FIX: Pass teamMembers and setTeamMembers props to SettingsView for user management. This resolves the property assignment error.
+        return <SettingsView currentUser={currentUser} teamMembers={teamMembers} setTeamMembers={setTeamMembers} />;
       default:
         return <DashboardView projects={projects} currentUser={currentUser} />;
     }

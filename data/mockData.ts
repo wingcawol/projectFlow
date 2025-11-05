@@ -1,13 +1,23 @@
+import { Project, TeamMember } from '@/types';
 
-import { Project, TeamMember } from '../types';
-
+// FIX: Added 'password' and 'isAdmin' to each team member object to match the updated TeamMember type, resolving compilation errors.
+// Added a new admin user to support user management features.
 export const initialTeamMembers: TeamMember[] = [
-    { id: 1, name: '김철수', role: 'Project Manager', email: 'cskim@example.com', avatar: 'https://i.pravatar.cc/150?u=1' },
-    { id: 2, name: '이영희', role: 'Backend Developer', email: 'yhlee@example.com', avatar: 'https://i.pravatar.cc/150?u=2' },
-    { id: 3, name: '박지성', role: 'Frontend Developer', email: 'jspark@example.com', avatar: 'https://i.pravatar.cc/150?u=3' },
-    { id: 4, name: '최민수', role: 'Data Scientist', email: 'mschoi@example.com', avatar: 'https://i.pravatar.cc/150?u=4' },
-    { id: 5, name: '정다혜', role: 'UI/UX Designer', email: 'dhjeong@example.com', avatar: 'https://i.pravatar.cc/150?u=5' },
-    { id: 6, name: '김민준', role: 'UI/UX Designer', email: 'minjun.kim@example.com', avatar: 'https://i.pravatar.cc/150?u=6' },
+    {
+        id: 1,
+        name: 'Admin',
+        role: 'System Administrator',
+        email: 'admin@projectflow.com',
+        avatar: 'https://i.pravatar.cc/150?u=admin',
+        password: 'admin123',
+        isAdmin: true,
+    },
+    { id: 2, name: '김철수', role: 'Project Manager', email: 'cskim@example.com', avatar: 'https://i.pravatar.cc/150?u=1', password: 'password123' },
+    { id: 3, name: '이영희', role: 'Backend Developer', email: 'yhlee@example.com', avatar: 'https://i.pravatar.cc/150?u=2', password: 'password123' },
+    { id: 4, name: '박지성', role: 'Frontend Developer', email: 'jspark@example.com', avatar: 'https://i.pravatar.cc/150?u=3', password: 'password123' },
+    { id: 5, name: '최민수', role: 'Data Scientist', email: 'mschoi@example.com', avatar: 'https://i.pravatar.cc/150?u=4', password: 'password123' },
+    { id: 6, name: '정다혜', role: 'UI/UX Designer', email: 'dhjeong@example.com', avatar: 'https://i.pravatar.cc/150?u=5', password: 'password123' },
+    { id: 7, name: '김민준', role: 'UI/UX Designer', email: 'minjun.kim@example.com', avatar: 'https://i.pravatar.cc/150?u=6', password: 'password123' },
 ];
 
 const ecommerceTimeline = [

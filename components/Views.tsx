@@ -1,11 +1,11 @@
-
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Project, TeamMember, ProjectStatus, View, ProjectHistoryItem, TimelineEvent } from '../types';
-import { PlusIcon, ArrowLeftIcon, UserPlusIcon, ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, UploadIcon, ClockIcon } from './Icons';
-import KanbanBoard from './KanbanBoard';
+import React, { useState, useCallback, useMemo } from 'react';
+// FIX: The path alias '@/' is used to maintain consistency.
+import { Project, TeamMember, ProjectStatus, ProjectHistoryItem, TimelineEvent, KanbanTask } from '@/types';
+import { PlusIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, UploadIcon, ClockIcon, TrashIcon } from '@/components/Icons';
+import KanbanBoard from '@/components/KanbanBoard';
 
 // Helper Functions
-const formatDate = (dateString: string) => new Date(dateString).toLocaleString('ko-KR');
+const formatDate = (dateString: string) => new Date(dateString).toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 
 const getStatusBadge = (status: ProjectStatus) => {
     const baseClasses = "px-3 py-1 text-xs font-semibold rounded-full";
@@ -182,8 +182,8 @@ export const DashboardView: React.FC<{ projects: Project[], currentUser: TeamMem
                     <p className="text-3xl font-bold text-blue-500">{completedCount}</p>
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm">
-                    <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">이슈 발생</h3>
-                    <p className="text-3xl font-bold text-red-500">{projects.filter(p=> p.status === '중단').length}</p>
+                    <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">중단됨</h3>
+                    <p className="text-3xl font-bold text-yellow-500">{projects.filter(p=> p.status === '중단').length}</p>
                 </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -249,7 +249,7 @@ export const ProjectListView: React.FC<{
                     <PlusIcon className="mr-2" /> 새 프로젝트 추가
                 </button>
             </div>
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center space-x-2 mb-4 p-2 bg-slate-100 dark:bg-slate-900/50 rounded-lg">
                 <FilterButton status="all" text="전체" />
                 <FilterButton status="진행" text="진행" />
                 <FilterButton status="시작" text="시작" />
@@ -319,7 +319,7 @@ export const ProjectDetailView: React.FC<{
         if (!newHistory.trim()) return;
         const newHistoryItem: ProjectHistoryItem = {
             id: Date.now(),
-            date: new Date().toISOString().split('T')[0],
+            date: new Date().toISOString(),
             user: currentUser.name,
             action: newHistory.trim(),
         };
@@ -603,13 +603,174 @@ export const CalendarView: React.FC<{ projects: Project[] }> = ({ projects }) =>
     );
 };
 
+// FIX: Add and export the 'MyTasksView' component, which provides a personal Kanban board for the current user.
+// This resolves the error 'Module has no exported member MyTasksView'.
+// MyTasks View
+type UserTask = KanbanTask & {
+  projectId: number;
+  projectName: string;
+  milestoneTitle?: string;
+};
+
+interface UserTasksState {
+  todo: UserTask[];
+  inprogress: UserTask[];
+  done: UserTask[];
+}
+
+type UserTaskColumn = keyof UserTasksState;
+
+export const MyTasksView: React.FC<{
+  projects: Project[];
+  currentUser: TeamMember;
+  updateProject: (updatedProject: Project) => void;
+}> = ({ projects, currentUser, updateProject }) => {
+
+  const userTasks = useMemo<UserTasksState>(() => {
+    const userProjects = projects.filter(p => p.team.includes(currentUser.name) || p.pm === currentUser.name);
+
+    const tasks: UserTasksState = { todo: [], inprogress: [], done: [] };
+
+    userProjects.forEach(project => {
+      const augmentTask = (task: KanbanTask, status: UserTaskColumn) => {
+        const milestone = project.timeline.find(m => m.id === task.milestoneId);
+        tasks[status].push({
+          ...task,
+          projectId: project.id,
+          projectName: project.name,
+          milestoneTitle: milestone ? milestone.title : '마일스톤 없음',
+        });
+      };
+      project.kanban.todo.forEach(task => augmentTask(task, 'todo'));
+      project.kanban.inprogress.forEach(task => augmentTask(task, 'inprogress'));
+      project.kanban.done.forEach(task => augmentTask(task, 'done'));
+    });
+    return tasks;
+  }, [projects, currentUser]);
+
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: UserTask, sourceColumn: UserTaskColumn) => {
+    const dragData = { taskId: task.id, projectId: task.projectId, sourceColumn };
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add('dragging');
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetColumn: UserTaskColumn) => {
+    e.preventDefault();
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+
+    const data = JSON.parse(e.dataTransfer.getData('application/json'));
+    if (!data) return;
+    const { taskId, projectId, sourceColumn } = data;
+
+
+    if (sourceColumn === targetColumn) return;
+
+    const projectToUpdate = projects.find(p => p.id === projectId);
+    if (!projectToUpdate) return;
+
+    let taskToMove: KanbanTask | undefined;
+    const newSourceTasks = projectToUpdate.kanban[sourceColumn].filter(task => {
+      if (task.id === taskId) {
+        taskToMove = task;
+        return false;
+      }
+      return true;
+    });
+
+    if (!taskToMove) return;
+
+    const newTargetTasks = [...projectToUpdate.kanban[targetColumn], taskToMove];
+    const updatedKanban = {
+      ...projectToUpdate.kanban,
+      [sourceColumn]: newSourceTasks,
+      [targetColumn]: newTargetTasks,
+    };
+
+    updateProject({ ...projectToUpdate, kanban: updatedKanban });
+  };
+  
+  const handleDragEnd = () => {
+    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      if(e.currentTarget.classList.contains('bg-slate-100')) {
+        e.currentTarget.classList.add('drag-over');
+      }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+  };
+
+  const TaskCard: React.FC<{ task: UserTask, sourceColumn: UserTaskColumn }> = ({ task, sourceColumn }) => (
+      <div
+        key={task.id}
+        draggable
+        onDragStart={(e) => handleDragStart(e, task, sourceColumn)}
+        className="bg-white dark:bg-slate-800 p-3 rounded-md shadow-sm cursor-grab active:cursor-grabbing"
+      >
+        <p>{task.content}</p>
+        <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+            <p className="font-semibold text-indigo-500 truncate" title={task.projectName}>{task.projectName}</p>
+            <p className="truncate" title={task.milestoneTitle}>마일스톤: {task.milestoneTitle}</p>
+        </div>
+      </div>
+  );
+
+  const TaskColumn: React.FC<{ title: string, tasks: UserTask[], columnId: UserTaskColumn }> = ({ title, tasks, columnId }) => (
+      <div
+          className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-4 flex-1 transition-colors duration-300"
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, columnId)}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+      >
+          <h3 className="font-bold text-lg mb-4 pb-2 border-b border-slate-300 dark:border-slate-600">{title} ({tasks.length})</h3>
+          <div className="space-y-3 min-h-[calc(100vh-250px)]">
+              {tasks.map((task) => (
+                  <TaskCard key={task.id} task={task} sourceColumn={columnId} />
+              ))}
+          </div>
+      </div>
+  );
+
+  return (
+    <div onDragEnd={handleDragEnd}>
+        <h1 className="text-3xl font-bold mb-6">내 작업 관리</h1>
+        <div className="flex flex-col md:flex-row gap-6">
+            <TaskColumn title="To Do" tasks={userTasks.todo} columnId="todo" />
+            <TaskColumn title="In Progress" tasks={userTasks.inprogress} columnId="inprogress" />
+            <TaskColumn title="Done" tasks={userTasks.done} columnId="done" />
+        </div>
+        <style>{`
+            .drag-over {
+                background-color: #e0e7ff !important; /* indigo-100 */
+            }
+            .dark .drag-over {
+                background-color: #3730a3 !important; /* indigo-800 */
+            }
+        `}</style>
+    </div>
+  );
+};
+
+
 // Team View
 export const TeamView: React.FC<{ teamMembers: TeamMember[] }> = ({ teamMembers }) => {
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">팀 멤버 관리</h1>
-                 <p className="text-sm text-slate-500 dark:text-slate-400">새로운 팀 멤버는 회원가입을 통해 추가할 수 있습니다.</p>
+                <h1 className="text-3xl font-bold">팀 멤버</h1>
+                 <p className="text-sm text-slate-500 dark:text-slate-400">총 {teamMembers.length}명의 멤버가 있습니다.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {teamMembers.map(member => (
@@ -627,7 +788,23 @@ export const TeamView: React.FC<{ teamMembers: TeamMember[] }> = ({ teamMembers 
 
 
 // Settings View
-export const SettingsView: React.FC<{ currentUser: TeamMember }> = ({ currentUser }) => {
+// FIX: Update SettingsView props to accept teamMembers and setTeamMembers for user management.
+export const SettingsView: React.FC<{
+    currentUser: TeamMember,
+    teamMembers: TeamMember[],
+    setTeamMembers: React.Dispatch<React.SetStateAction<TeamMember[]>>
+}> = ({ currentUser, teamMembers, setTeamMembers }) => {
+
+    const handleDeleteUser = (userId: number) => {
+        if (currentUser.id === userId) {
+            alert("자기 자신은 삭제할 수 없습니다.");
+            return;
+        }
+        if (window.confirm('정말로 이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+            setTeamMembers(prev => prev.filter(member => member.id !== userId));
+        }
+    };
+
     return (
         <div>
             <h1 className="text-3xl font-bold mb-6">설정</h1>
@@ -654,6 +831,37 @@ export const SettingsView: React.FC<{ currentUser: TeamMember }> = ({ currentUse
                         </div>
                     </form>
                 </div>
+
+                {/* FIX: Add user management section visible only to admin users by checking currentUser.isAdmin. This resolves the error 'Property 'isAdmin' does not exist on type 'TeamMember''. */}
+                {currentUser.isAdmin && (
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm">
+                        <h2 className="text-xl font-semibold mb-4 border-b dark:border-slate-700 pb-3">사용자 관리</h2>
+                        <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+                            {/* FIX: Filter out the admin user from the list of users that can be deleted. */}
+                            {teamMembers.map(member => (
+                                <li key={member.id} className="flex items-center justify-between py-3">
+                                    <div className="flex items-center gap-3">
+                                        <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover" />
+                                        <div>
+                                            <p className="font-semibold">{member.name} <span className="text-sm text-slate-500">({member.role})</span></p>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">{member.email}</p>
+                                        </div>
+                                    </div>
+                                    {/* Admin cannot be deleted */}
+                                    {!member.isAdmin && (
+                                        <button
+                                            onClick={() => handleDeleteUser(member.id)}
+                                            className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition"
+                                            aria-label={`Delete ${member.name}`}
+                                        >
+                                            <TrashIcon />
+                                        </button>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
             </div>
              <style>{`
                 .input-field {

@@ -20,3 +20,5 @@ export const CheckCircleIcon: React.FC<IconProps> = ({ className }) => <i classN
 export const TimesCircleIcon: React.FC<IconProps> = ({ className }) => <i className={`fas fa-times-circle ${className}`}></i>;
 export const ClockIcon: React.FC<IconProps> = ({ className }) => <i className={`fas fa-clock ${className}`}></i>;
 export const TrashIcon: React.FC<IconProps> = ({ className }) => <i className={`fas fa-trash ${className}`}></i>;
+// FIX: Add UserCheckIcon for the 'My Tasks' view link in the sidebar.
+export const UserCheckIcon: React.FC<IconProps> = ({ className }) => <i className={`fas fa-user-check ${className}`}></i>;
