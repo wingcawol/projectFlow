@@ -22,3 +22,5 @@ export const ClockIcon: React.FC<IconProps> = ({ className }) => <i className={`
 export const TrashIcon: React.FC<IconProps> = ({ className }) => <i className={`fas fa-trash ${className}`}></i>;
 // FIX: Add UserCheckIcon for the 'My Tasks' view link in the sidebar.
 export const UserCheckIcon: React.FC<IconProps> = ({ className }) => <i className={`fas fa-user-check ${className}`}></i>;
+// FIX: Export PencilIcon to resolve import error in Views.tsx.
+export const PencilIcon: React.FC<IconProps> = ({ className }) => <i className={`fas fa-pencil-alt ${className}`}></i>;

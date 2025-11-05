@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 // FIX: The path alias '@/' is used to maintain consistency.
 import { Project, TeamMember, ProjectStatus, ProjectHistoryItem, TimelineEvent, KanbanTask } from '@/types';
-import { PlusIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, UploadIcon, ClockIcon, TrashIcon } from '@/components/Icons';
+import { PlusIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, UploadIcon, ClockIcon, TrashIcon, PencilIcon } from '@/components/Icons';
 import KanbanBoard from '@/components/KanbanBoard';
 
 // Helper Functions
@@ -305,6 +305,74 @@ export const ProjectListView: React.FC<{
     );
 };
 
+const ManageTeamModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    project: Project;
+    allMembers: TeamMember[];
+    onUpdateTeam: (newTeam: string[]) => void;
+}> = ({ isOpen, onClose, project, allMembers, onUpdateTeam }) => {
+    if (!isOpen) return null;
+
+    const [selectedMembers, setSelectedMembers] = useState<string[]>(project.team);
+
+    const handleMemberToggle = (memberName: string) => {
+        if (memberName === project.pm) return; // PM cannot be deselected
+        setSelectedMembers(prev =>
+            prev.includes(memberName)
+                ? prev.filter(name => name !== memberName)
+                : [...prev, memberName]
+        );
+    };
+
+    const handleSave = () => {
+        onUpdateTeam(selectedMembers);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg p-6 transform transition-all animate-fade-in-up">
+                <div className="flex justify-between items-center mb-6 pb-4 border-b dark:border-slate-700">
+                    <h2 className="text-2xl font-bold">팀 멤버 관리</h2>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+                </div>
+                <div className="max-h-96 overflow-y-auto pr-2">
+                    <ul className="space-y-3">
+                        {allMembers.map(member => (
+                            <li key={member.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                <div className="flex items-center gap-3">
+                                    <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover" />
+                                    <div>
+                                        <p className="font-semibold">{member.name}</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">{member.role}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center">
+                                    {member.name === project.pm && (
+                                        <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mr-4">PM</span>
+                                    )}
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedMembers.includes(member.name)}
+                                        disabled={member.name === project.pm}
+                                        onChange={() => handleMemberToggle(member.name)}
+                                        className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                                    />
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <div className="mt-8 flex justify-end space-x-4">
+                    <button type="button" onClick={onClose} className="btn-secondary">취소</button>
+                    <button type="button" onClick={handleSave} className="btn-primary">저장</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ProjectDetail View
 export const ProjectDetailView: React.FC<{
   project: Project;
@@ -314,7 +382,7 @@ export const ProjectDetailView: React.FC<{
   currentUser: TeamMember;
 }> = ({ project, teamMembers, onBack, updateProject, currentUser }) => {
     const [activeTab, setActiveTab] = useState('overview');
-
+    const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
     const [newHistory, setNewHistory] = useState('');
     const [timelineDate, setTimelineDate] = useState('');
     const [timelineTitle, setTimelineTitle] = useState('');
@@ -422,7 +490,15 @@ export const ProjectDetailView: React.FC<{
                             <p className="text-slate-600 dark:text-slate-300 whitespace-pre-line">{project.description}</p>
                         </div>
                         <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm">
-                            <h3 className="text-xl font-semibold mb-4">참여 멤버</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-semibold">참여 멤버</h3>
+                                <button
+                                    onClick={() => setIsTeamModalOpen(true)}
+                                    className="btn-secondary py-1 px-3 text-sm flex items-center gap-2"
+                                >
+                                    <PencilIcon /> 관리
+                                </button>
+                            </div>
                             <ul className="space-y-4">
                                {projectTeam.map(member => (
                                     <li key={member.id} className="flex items-center space-x-3">
@@ -547,6 +623,15 @@ export const ProjectDetailView: React.FC<{
                     </div>
                 )}
             </div>
+             <ManageTeamModal
+                isOpen={isTeamModalOpen}
+                onClose={() => setIsTeamModalOpen(false)}
+                project={project}
+                allMembers={teamMembers}
+                onUpdateTeam={(newTeam) => {
+                    updateProject({ ...project, team: newTeam });
+                }}
+            />
         </div>
     );
 };
